@@ -13,11 +13,15 @@ $Groups | ForEach-Object {
     $group = $_
     Get-DistributionGroup -Identity $group.Name | ForEach-Object {
         New-Object -TypeName PSObject -Property @{
-            Group        = $_.Alias
-            DisplayName  = $_.DisplayName
-            PrimaryEmail = $_.PrimarySmtpAddress
-            GALHidden    = $_.HiddenFromAddressListsEnabled
-            LegacyExchDN = $_.LegacyExchangeDN
+            Group                  = $_.Alias
+            DisplayName            = $_.DisplayName
+            PrimaryEmail           = $_.PrimarySmtpAddress
+            GALHidden              = $_.HiddenFromAddressListsEnabled
+            LegacyExchDN           = $_.LegacyExchangeDN
+            AcceptMessagesOnlyFrom = $_.AcceptMessagesOnlyFrom
+            ManagedBy              = $_.ManagedBy
+            OU                     = $_.OrganizationalUnit
+            EmailAddresses         = $_.EmailAddresses
         }
     }} |
     Export-CSV "DL_attribute_info.csv" -NoTypeInformation
