@@ -17,7 +17,7 @@ $Groups | ForEach-Object {
             DisplayName            = $_.DisplayName
             PrimaryEmail           = $_.PrimarySmtpAddress
             GALHidden              = $_.HiddenFromAddressListsEnabled
-            LegacyExchDN           = $_.LegacyExchangeDN
+            LegacyExchDN_X500      = $_.LegacyExchangeDN
             AcceptMessagesOnlyFrom = $_.AcceptMessagesOnlyFrom
             ManagedBy              = $_.ManagedBy
             OU                     = $_.OrganizationalUnit
