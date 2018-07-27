@@ -15,6 +15,6 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $DL in $DLs ) { 
+foreach ( $DL in $DLs ) {
     Set-DistributionGroup -Identity $DL.Name -Managedby $DL.Managedby
-}  
+}
