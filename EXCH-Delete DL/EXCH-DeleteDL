@@ -1,0 +1,6 @@
+$Groups = Import-Csv -Path '.\DL-import.csv'
+$Groups | ForEach-Object {
+    $group = $_
+    Remove-DistributionGroup -Identity $group.Name
+        } |
+
