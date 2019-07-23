@@ -1,3 +1,4 @@
+Clear-Host
 $DriveLetter = Read-Host 'What path would you like to scan/cleanup? (ex: C:\Documents\ or  C:\)'
 Write-Host " "
 Write-Host -nonewline "Dry-Run cleanup of $Driveletter, Do you want to continue? (Y/N) "
