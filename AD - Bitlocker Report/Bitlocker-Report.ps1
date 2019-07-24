@@ -10,7 +10,7 @@ Import-Module ActiveDirectory -ErrorAction Stop
 
 # Variables
 $Computers = get-adcomputer -filter *
-$CurrentDate = (Get-Date).ToString("yyyy_MM_dd-hh_MM")
+$CurrentDate = (Get-Date).ToString("yyyy_MM_dd-hh_mm")
 
 # Code Execution
 ForEach ($Computer in $Computers) {
