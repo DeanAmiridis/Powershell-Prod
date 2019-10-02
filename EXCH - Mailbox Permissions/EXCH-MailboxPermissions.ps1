@@ -9,4 +9,4 @@ Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $data = foreach ( $Mailbox in $Mailboxes ) { 
     Get-MailboxPermission -Identity $Mailbox.UPN | Select-Object AccessRights,User,Identity | Format-List
 } 
-$data | Export-CSV '.\Exchange-Data-Export.csv' -NoTypeInformation
+$data | Out-File '.\Exchange-Data-Export.csv'
