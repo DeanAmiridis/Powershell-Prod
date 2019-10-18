@@ -14,7 +14,7 @@
 # The user-import.csv needs to be in the same path as the ps1 file.
 # each line of the csv needs to be as follows (Name|Upn) **
 # Example: 
-# Joe.Smith|dean.amiridis@alteonhealth.com
+# Joe.Smith|joe.smith@alteonhealth.com
 # Mary.Smith|mary.smith@alteonhealth.com
 
 # ---- Data Import ----
