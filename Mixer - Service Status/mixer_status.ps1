@@ -1,3 +1,6 @@
+# Gets current status of mixer and reports if there are any known outages
+# To have the status page pull up when script is ran, change ie.visible to TRUE
+
 $targetUrl  = 'https://status.mixer.com/'
 $ie = New-Object -com InternetExplorer.Application 
 $ie.visible=$false
