@@ -6,6 +6,7 @@ $SaveLOC = Read-Host "Where would you like to save the report to? (full path!)"
 #SaveLoc = "C:\temp\bitlocker-report.txt"
 Write-Host "Obtaining Bitlocker Recovery Status" -BackgroundColor 'Black' -ForegroundColor 'Yellow'
 $BitStatus >> $SaveLOC
+manage-bde -status >> $SaveLOC
 Write-Host "Successfully Obtained Bitlocker Recovery Status" -BackgroundColor 'Black' -ForegroundColor 'Green'
 Write-Host "Obtaining Bitlocker Recovery Keys (If applicable)" -BackgroundColor 'Black' -ForegroundColor 'Yellow'
 $BitRecoveryKey >> $SaveLOC
