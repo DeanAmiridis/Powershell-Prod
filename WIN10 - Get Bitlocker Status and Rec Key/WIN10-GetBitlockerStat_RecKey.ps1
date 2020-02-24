@@ -1,8 +1,9 @@
-
-$BitStatus = Get-BitLockerVolume
+﻿$BitStatus = Get-BitLockerVolume
 $BitRecoveryKey = (Get-BitLockerVolume -MountPoint C).KeyProtector
 Write-Warning "PLEASE PUT FULL PATH WITH FILENAME AND TXT EXT!! (Ex: C:\bitlocker-report.txt)"
+# To automate this script, comment out the SaveLOC Read-Host line below and UNcomment the line under it with the expected save location
 $SaveLOC = Read-Host "Where would you like to save the report to? (full path!)"
+#SaveLoc = "C:\temp\bitlocker-report.txt"
 Write-Host "Obtaining Bitlocker Recovery Status" -BackgroundColor 'Black' -ForegroundColor 'Yellow'
 $BitStatus >> $SaveLOC
 Write-Host "Successfully Obtained Bitlocker Recovery Status" -BackgroundColor 'Black' -ForegroundColor 'Green'
