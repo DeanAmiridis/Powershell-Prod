@@ -1,7 +1,8 @@
-#Imports active directory module
+# ---- Module Import ----
 import-Module ActiveDirectory
+# ---- Module Import End ----
 
----- Data Import ----
+# ---- Data Import ----
 Clear-Host # Start with clean powershell
 $UserAccounts = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("Name", "NewUPN")
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
@@ -16,3 +17,4 @@ if ( $response -ne "Y" ) { exit }
 foreach ( $UserAccount in $UserAccounts ) { 
     Get-ADUser $Username.Name | Set-ADUser -UserPrincipalName $UserAccount.NewUPN
 } 
+# ---- Action End ----
