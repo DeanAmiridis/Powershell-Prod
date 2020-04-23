@@ -15,6 +15,7 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $UserAccount in $UserAccounts ) { 
-    Get-ADUser $Username.Name | Set-ADUser -UserPrincipalName $UserAccount.NewUPN
+    Get-ADUser $UserAccount.Name | Set-ADUser -UserPrincipalName $UserAccount.NewUPN
+    Write-Host "Successfully adjusted UPN for $UserAccount.Name to $UserAccount.NewUPN"
 } 
 # ---- Action End ----
