@@ -12,7 +12,7 @@ while($ie.Busy) {
 
 $output = $ie.Document.body.innerHTML
 
-if($output -Like '*Outage*')
+if($output -eq 'Partial Outage' -or $output -eq 'Major Outage' -or $output -eq 'Degraded Performance' )
 {Write-Host "Yes, There are outages reported on mixer." -ForegroundColor "Red"}
 else
 {Write-Host "No, There are no outages reported on mixer." -ForegroundColor "Green"}
