@@ -5,6 +5,7 @@ $targetUrl  = 'https://status.mixer.com/'
 $ie = New-Object -com InternetExplorer.Application 
 $ie.visible=$false
 $ie.navigate($targetUrl)
+$Date = Get-Date -Format G
 
 while($ie.Busy) {
      Start-Sleep -m 2000
@@ -13,6 +14,6 @@ while($ie.Busy) {
 $output = $ie.Document.body.innerHTML
 
 if($output -eq 'Partial Outage' -or $output -eq 'Major Outage' -or $output -eq 'Degraded Performance' )
-{Write-Host "Yes, There are outages reported on mixer." -ForegroundColor "Red"}
+{Write-Host "$Date - Yes, There are outages reported on mixer." -ForegroundColor "Red"}
 else
-{Write-Host "No, There are no outages reported on mixer." -ForegroundColor "Green"}
+{Write-Host "$Date - No, There are no outages reported on mixer." -ForegroundColor "Green"}
