@@ -10,5 +10,5 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $DirPath in $DirPaths ) {
-robocopy $EmptyDir $DirPath /MIR
+    robocopy $EmptyDir $DirPath /MIR
 }
