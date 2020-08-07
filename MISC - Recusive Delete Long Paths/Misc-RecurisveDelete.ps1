@@ -2,7 +2,7 @@ $DirPath = Import-Csv -Path '.\dir-path.csv' -Delimiter '|'  -Header @("Path")
 $EmptyDir = "C:\empty\"
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $DirPathCount = $DirPath.Count
-Write-Host "Total Imported Accounts: $DirPathCount" -ForegroundColor "yellow"
+Write-Host "Total Imported Paths: $DirPathCount" -ForegroundColor "yellow"
 write-host -nonewline "Do you want to continue? (Y/N) " -ForegroundColor "red"
 $response = read-host
 if ( $response -ne "Y" ) { exit }
@@ -10,5 +10,5 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $DirPath in $DirPaths ) {
-    robocopy $EmptyDir $DirPath /MIR
+    robocopy $EmptyDir "$DirPath" /MIR
 }
