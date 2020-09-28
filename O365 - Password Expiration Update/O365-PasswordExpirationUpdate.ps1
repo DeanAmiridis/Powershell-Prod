@@ -17,5 +17,6 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $UPN in $UPNs ) { 
-    Get-MsolUser -UserPrincipalName $UPN | Set-MsolUser -PasswordNeverExpires $PassExpiration
+    Get-MsolUser -UserPrincipalName $UPN.upn | Set-MsolUser -PasswordNeverExpires $PassExpiration
+    Write-Host "Disabled Password Expiration for $UPN" -ForegroundColor Green
 }  
