@@ -2,7 +2,7 @@
 # $ErrorActionPreference = "SilentlyContinue" #This is for ErrorHandling, Uncomment to ignore errors.
 
 # ---- Variables ----
-$ExportPath = "C:\"
+$ExportPath = "C:\filename.pst"
 
 # ---- Data Import ----
 $Mailboxes = Import-Csv -Path '.\mailbox-import.csv' -Delimiter ','  -Header @("mailboxID")
