@@ -18,7 +18,7 @@ $TempPath = "" # This is your working directory, where the MSI will be downloade
 
 ## <----- Actions ----->
 Invoke-WebRequest $DownloadURL -OutFile $TempPath
-Start-Sleep -s 240 # This pauses the script for 60 seconds to allow the installer to run. You can adjust this based on your environment. (Ex: 240 = 4 Minutes)
+Start-Sleep -s 240 # This pauses the script for 240 seconds to allow the installer to run. You can adjust this based on your environment. (Ex: 240 = 4 Minutes)
 
 $FileCheck = Test-Path $TempPath
 If ($FileCheck -eq $True) {
