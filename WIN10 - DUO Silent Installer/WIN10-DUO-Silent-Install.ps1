@@ -5,8 +5,9 @@
 # For information on flags used in this script, please reference the following URL:
 # https://help.duo.com/s/article/1090?language=en_US
 
+
 # <----- Required ** DO NOT TOUCH ** ----->
-[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") #N1: Required to prompt user post-install that DUO is required upon next login. Comment line 37 to disable.
 $DUOVerification = Get-WmiObject -Class Win32_Product | where-object { $_.name -Like "Duo*" }
 
 ## <----- Variables ----->
@@ -23,7 +24,7 @@ Start-Sleep -s 240 # This pauses the script for 240 seconds to allow the install
 $FileCheck = Test-Path $TempPath
 If ($FileCheck -eq $True) {
     Write-EventLog -LogName Application -Source "DUO-Silent-Installer" -EntryType Information -EventID 3 -Message "Successfully downloaded DUO Installer to: $TempPath"
-    $TempPath /S /V /qn IKEY="$IntegrationKey" SKEY="$SecretKey" HOST="$APIHostname" AUTOPUSH="#1" FAILOPEN="#1" SMARTCARD="#0" RDPONLY="#0" FAILOPEN="#1"
+    $TempPath /S /V /qn IKEY="$IntegrationKey" SKEY="$SecretKey" HOST="$APIHostname" AUTOPUSH="#1" FAILOPEN="#1" SMARTCARD="#0" RDPONLY="#0" FAILOPEN="#1" # Triggers can be modified here based on your needs/requirements. See link above for reference.
     Start-Sleep -s 60 # This pauses the script for 60 seconds to allow the installer to run. You can adjust this based on your environment.
 }
 else {
@@ -33,7 +34,7 @@ else {
 }
 If ($null -ne $DUOVerification) {
     Write-EventLog -LogName Application -Source "DUO-Silent-Installer" -EntryType Information -EventID 3 -Message "DUO Silently installed successfully"
-    [System.Windows.Forms.MessageBox]::Show("DUO has been installed on your machine. Please note upon next login you will be prompted to pass multifactor authentication after your password is entered.", "DUO - ALERT!", 1, 48)
+    [System.Windows.Forms.MessageBox]::Show("DUO has been installed on your machine. Please note upon next login you will be prompted to pass multifactor authentication after your password is entered.", "DUO - ALERT!", 1, 48) # See notes above (Ref: #N1)
     Write-EventLog -LogName Application -Source "DUO-Silent-Installer" -EntryType Information -EventID 3 -Message "Warning message provided to user."
     $DUOVerification | Out-File -Append .\DUO_Silent_Installer-Log.csv # Pulls DUO Installed version/application information and writes to log.
     Write-EventLog -LogName Application -Source "DUO-Silent-Installer" -EntryType Information -EventID 3 -Message "DUO installation confirmation completed and exported to log."
@@ -54,4 +55,4 @@ else {
 }
 
 ## <----- Final log output ----->
-Get-Eventlog -LogName Application -Source DUO-Silent-Installer -Newest 25 | Format-Table -Wrap | Out-File -Append .\DUO_Silent_Installer-Log.csv
+Get-Eventlog -LogName Application -Source DUO-Silent-Installer -Newest 25 | Format-Table -Wrap | Out-File -Append .\DUO_Silent_Installer-Log.csv # Log file is located in same directory as the ps1.
