@@ -24,6 +24,14 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Actions ----
 foreach ( $Mailbox in $Mailboxes ) {
-    New-MoveRequest -Identity $Mailboxes.Email -remote -RemoteHostName ($HybridURL) -TargetDeliveryDomain $TargetDeliveryDomain -RemoteCredential $UserCredential -AcceptLargeDataLoss -BadItemLimit 50 -LargeItemLimit 50 -BatchName $Mailboxes.Name
+    New-MoveRequest -Identity $Mailboxes.Email`
+        -remote`
+    -RemoteHostName ($HybridURL)`
+        -TargetDeliveryDomain $TargetDeliveryDomain`
+    -RemoteCredential $UserCredential`
+    -AcceptLargeDataLoss`
+    -BadItemLimit 50`
+    -LargeItemLimit 50`
+    -BatchName $Mailboxes.Name
     Write-Host "Batch created for $Mailboxes.Name" -ForegroundColor "Green"
 }
