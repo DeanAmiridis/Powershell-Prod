@@ -25,9 +25,9 @@ if ( $response -ne "Y" ) { exit }
 # ---- Actions ----
 foreach ( $Mailbox in $Mailboxes ) {
     New-MoveRequest -Identity $Mailboxes.Email`
-        -remote`
+    -remote`
     -RemoteHostName ($HybridURL)`
-        -TargetDeliveryDomain $TargetDeliveryDomain`
+    -TargetDeliveryDomain $TargetDeliveryDomain`
     -RemoteCredential $UserCredential`
     -AcceptLargeDataLoss`
     -BadItemLimit 50`
