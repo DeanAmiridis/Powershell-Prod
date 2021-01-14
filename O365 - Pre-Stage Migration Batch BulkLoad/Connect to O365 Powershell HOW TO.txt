@@ -1,6 +1,0 @@
-Paste the below into powershell (ONCE) before you run the script. DO NOT CHANGE THE VARIABLE NAME HERE
-
-
-$UserCredential = Get-Credential
-$Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $UserCredential -Authentication Basic -AllowRedirection
-Import-PSSession $Session
