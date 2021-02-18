@@ -17,6 +17,7 @@ $CurrentDate = (Get-Date).ToString("yyyy_MM_dd-hh_mm")
 # Code Execution
 ForEach ($Computer in $Computers) {
     Get-ADobject -searchbase $computer -filter { objectclass -eq 'msFVE-RecoveryInformation' } -properties msFVE-RecoveryPassword, whencreated | select-object @{name = "Computer Name"; Expression = { $computer.name } }, whenCreated, msFVE-RecoveryPassword | export-csv Bitlocker-Report_$CurrentDate.csv -append -NoTypeInformation
+    Write-Host "Scanning Bitlocker data for $Computer ..." -ForegroundColor Yellow
 }
 
 # End Script/Identification
