@@ -13,10 +13,11 @@ Write-Host "Running Bitlocker Report ..." -ForegroundColor Yellow
 # Variables
 $Computers = get-adcomputer -filter *
 $CurrentDate = (Get-Date).ToString("yyyy_MM_dd-hh_mm")
+$DC = Hostname
 
 # Code Execution
 ForEach ($Computer in $Computers) {
-    Get-ADobject -searchbase $computer -filter { objectclass -eq 'msFVE-RecoveryInformation' } -properties msFVE-RecoveryPassword, whencreated | select-object @{name = "Computer Name"; Expression = { $computer.name } }, whenCreated, msFVE-RecoveryPassword | export-csv Bitlocker-Report_$CurrentDate.csv -append -NoTypeInformation
+    Get-ADobject -searchbase $computer -filter { objectclass -eq 'msFVE-RecoveryInformation' } -properties msFVE-RecoveryPassword, whencreated | select-object @{name = "Computer Name"; Expression = { $computer.name } }, whenCreated, msFVE-RecoveryPassword | export-csv $DC-Bitlocker-Report_$CurrentDate.csv -append -NoTypeInformation
     Write-Host "Scanning Bitlocker Data for $Computer ..." -ForegroundColor Yellow -BackgroundColor Black
 }
 
