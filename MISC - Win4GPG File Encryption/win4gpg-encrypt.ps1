@@ -17,7 +17,7 @@ if (Test-Path $Files2EncryptHeaderCleanup) {
 }
 
 # Grab files in encrypt directory
-$RootPath = "C:\Git\Powershell-Dev\Win4GPG - File Encryption\*.txt"
+$RootPath = ".\*.txt"
 $FileList = Get-ChildItem -Path $RootPath -Name
 $FileList | Out-File "Files2Encrypt.csv"
 import-csv .\Files2Encrypt.csv -Header "Name" | export-csv .\Files2Encrypt-Header.csv -NoTypeInformation
