@@ -1,10 +1,14 @@
-# For simple passwords, paste the URL below in the StrongPass Variable
-# Simple Password URL: http://www.dinopass.com/password/simple
-# Strong Password URL: https://www.dinopass.com/password/strong
-
-# Variables
-$StrongPass = "https://www.dinopass.com/password/strong"
-$WebResponse = Invoke-WebRequest $StrongPass
-
 # Actions
-Write-Host "Your password: $WebResponse" -BackgroundColor Green -ForegroundColor Black
+$PassType = Read-Host -Prompt 'Please enter Simple or Strong for password type'
+if ($PassType -like "Simple") {
+    $SimplePass = "http://www.dinopass.com/password/simple"
+    $WebResponseSimple = Invoke-WebRequest $SimplePass
+    Write-Host "Your simple password: $WebResponseSimple" -BackgroundColor Green -ForegroundColor Black
+}
+else {
+    $StrongPass = "https://www.dinopass.com/password/strong"
+    $WebResponseStrong = Invoke-WebRequest $StrongPass
+    Write-Host "Your strong password: $WebResponseStrong" -BackgroundColor Green -ForegroundColor Black
+}
+
+
