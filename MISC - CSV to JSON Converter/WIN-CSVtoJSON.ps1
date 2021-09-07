@@ -1,11 +1,11 @@
 #-----------------------------------------
 #             VARIABLES                  |
 #-----------------------------------------
-
-# This variable should contain the full path to the source file of the CSV.
-$SourceFile = "C:\mycsvfile.csv"
-# This variable should contain the full path to where you would like the destination JSON to be placed.
-$DestinationFile = "mybrandnewfile.json"
+[CmdletBinding()]
+Param(
+  [string]$SourceFile,
+  [string]$DestinationFile
+)
 
 #-----------------------------------------
 #              EXECUTION                 |
