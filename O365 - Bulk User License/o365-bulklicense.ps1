@@ -11,6 +11,8 @@ $licenseSku = "reseller-account:ENTERPRISEPACK"
 
 # ---- Action ----
 foreach ( $O365User in $O365Users ) {
-    get-msoluser -userprincipalname $o365user.UPN | Set-Msoluser -UsageLocation $365UsageLocation | Set-Msoluserlicense -AddLicenses "$licenseSku"
-    Write-Host "License successfully added to $o365user.upn" -ForegroundColor Yellow
+    get-msoluser -userprincipalname $O365user.UPN | Set-Msoluser -UsageLocation $365UsageLocation
+    Write-Host "Set UsageLocation for $O365User.UPN to $365UsageLocation" -ForegroundColor Green
+    get-msoluser -userprincipalname $O365user.UPN | Set-Msoluserlicense -AddLicenses "$licenseSku"
+    Write-Host "License successfully added to $O365user" -ForegroundColor Yellow
 }
