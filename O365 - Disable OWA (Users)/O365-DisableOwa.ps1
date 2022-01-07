@@ -23,6 +23,6 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $O365UserList in $O365UserLists ) {
-    Set-CasMailbox -Identity $O365UserList -OWAEnabled $false
-    Write-Host "OWA Access disabled for user account $O365UserList" -ForegroundColor "Green"
+    Set-CasMailbox $O365UserList.Name -OWAEnabled $false
+    Write-Host "OWA Access disabled for user account $O365UserList.Name" -ForegroundColor "Green"
 }
