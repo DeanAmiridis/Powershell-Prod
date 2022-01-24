@@ -15,7 +15,7 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $UserAccount in $UserAccounts ) {
-    Get-ADUser $UserAccount.Name | Set-ADUser -Title $UserAccount.Manager
+    Get-ADUser $UserAccount.Name | Set-ADUser -Manager $UserAccount.Manager
     Write-Host "Successfully updated Manager for $UserAccount.Name to $UserAccount.Manager"
 }
 # ---- Action End ----
