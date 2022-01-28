@@ -17,8 +17,8 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $User in $Users ) {
-    Set-Mailbox -Identity "$UPN" -RetentionPolicy "$RetentionPolicyName"
-    Write-Host "Retention Policy set for $UPN" -ForegroundColor Green
-    Start-ManagedFolderAssistant -Identity $UPN
-    Write-Host "Folder Assistant restarted for $UPN" -ForegroundColor Yellow
+    Set-Mailbox -Identity $User.UPN -RetentionPolicy $RetentionPolicyName
+    Write-Host "Retention Policy set for $User.UPN" -ForegroundColor Green
+    Start-ManagedFolderAssistant -Identity $User.UPN
+    Write-Host "Folder Assistant restarted for $User.UPN" -ForegroundColor Yellow
 }
