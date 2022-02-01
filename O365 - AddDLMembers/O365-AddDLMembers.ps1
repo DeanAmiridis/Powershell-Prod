@@ -17,7 +17,7 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $DL in $DLs ) { 
+foreach ( $DL in $DLs ) {
     Add-DistributionGroupMember -Identity $DL.Name -Member $DL.Members -ea "SilentlyContinue" -ev err
     If ($err.count -gt 0) {
         Write-Host "ERROR: Error with account $DL.Members" -ForegroundColor "Red"
