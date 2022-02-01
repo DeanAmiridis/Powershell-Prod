@@ -12,6 +12,6 @@
     <br />
     <a href="https://github.com/deanamiridis/Powershell/issues">Report Bug</a>
     ·
-    <a href="https://github.com/deanamiridis/Powershell/issues">Request Script</a>
+      <a href="http://gitrequest.aselectfew.com">Request a Script</a>
   </p>
 </p>
