@@ -1,3 +1,5 @@
+# For no write-back; comment out Write-Hosts or remove Else entirely.
+
 $PrintServer = "\\SERVERNAME"
 $Printers = Get-WmiObject -Class Win32_Printer
 ForEach ($Printer in $Printers) {
@@ -8,3 +10,4 @@ ForEach ($Printer in $Printers) {
     else {
         Write-host "Printer $Printer.Name does not meet criteria (Ignored)"
     }
+}
