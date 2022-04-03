@@ -1,5 +1,5 @@
 # Variables
-$LogPath = "C:\temp\psautoupdater_log.txt" # Change this directory to your preferred log file destination.
+$LogPath = "C:\psautoupdater_log.txt" # Change this directory to your preferred log file destination.
 
 # Install required module
 Write-Host "Installing PSWindowsUpdate module (required)..." -ForegroundColor Yellow
@@ -8,6 +8,6 @@ Write-Host "Installed/Confirmed PSWindowsUpdate module (required)..." -Foregroun
 
 # Check for windows updates & install
 Write-Host "Checking/Installing updates..." -ForegroundColor Yellow
-Get-WindowsUpdate -install -AcceptAll >> Out-File $LogPath
+Get-WindowsUpdate -Install -AcceptAll -ForceDownload -ForceInstall | Out-File $LogPath
 Write-Host "Updates checked/installed..." -ForegroundColor Green
 
