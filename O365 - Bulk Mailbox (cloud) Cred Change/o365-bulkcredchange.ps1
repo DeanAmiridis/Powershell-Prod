@@ -14,5 +14,5 @@ if ( $response -ne "Y" ) { exit }
 # ---- Action ----
 foreach ( $UPN in $UPNs ) { 
     Set-MsolUserPassword -UserPrincipalName $UPN.Address -NewPassword $UPN.NewPass
-    Write-Host "Credential changed for $UPN" -ForegroundColor Green
+    Write-Host "Credential changed for $UPN.Address" -ForegroundColor Green
 }  
