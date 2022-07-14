@@ -2,7 +2,7 @@
 Connect-MsolService # Comment out if you plan on running the script while already connected to MSOLService
 
 # ---- Data Import ----
-$UPNs = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("Address", "NewPass")
+$UPNs = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $UPNsCount = $UPNs.Count - 1
 Write-Host "Total Imported Accounts: $UPNsCount" -ForegroundColor "yellow"
@@ -13,6 +13,8 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $UPN in $UPNs ) { 
-    Set-MsolUserPassword -UserPrincipalName $UPN.Address -NewPassword $UPN.NewPass -ForceChangePassword $false
-    Write-Host "Credential changed for $UPN.Address" -ForegroundColor Green
+    $Address = $UPN.Address
+    $Password = $UPN.Password
+    Set-MsolUserPassword -UserPrincipalName $Address -NewPassword $Password -ForceChangePassword $false
+    Write-Host "Credential changed for $Address" -ForegroundColor Green
 }  
