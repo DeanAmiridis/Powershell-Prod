@@ -4,7 +4,7 @@ Connect-MsolService # Comment out if you plan on running the script while alread
 # ---- Data Import ----
 $UPNs = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
-$UPNsCount = $UPNs.Count - 1
+$UPNsCount = $UPNs.Count
 Write-Host "Total Imported Accounts: $UPNsCount" -ForegroundColor "yellow"
 write-host -nonewline "Do you want to continue? (Y/N) " -ForegroundColor "red"
 $response = read-host
@@ -12,7 +12,7 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $UPN in $UPNs ) { 
+foreach ( $UPN in $UPNs ) {
     $Address = $UPN.Address
     $Password = $UPN.Password
     Set-MsolUserPassword -UserPrincipalName $Address -NewPassword $Password -ForceChangePassword $false
