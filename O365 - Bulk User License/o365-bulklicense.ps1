@@ -5,14 +5,15 @@
 # The csv file should be called user-import.csv and live in the same directory as the .ps1 file. Only 1 column needed that contains the UPN's for all the accounts you are targetting.
 
 # ---- Variables ----
-$O365Users = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("UPN")
+$O365Users = Import-Csv -Path '.\user-import.csv'
 $365UsageLocation = "US"
 $licenseSku = "reseller-account:ENTERPRISEPACK"
 
 # ---- Action ----
 foreach ( $O365User in $O365Users ) {
-    get-msoluser -userprincipalname $O365user.UPN | Set-Msoluser -UsageLocation $365UsageLocation
-    Write-Host "Set UsageLocation for $O365User.UPN to $365UsageLocation" -ForegroundColor Green
-    get-msoluser -userprincipalname $O365user.UPN | Set-Msoluserlicense -AddLicenses "$licenseSku"
-    Write-Host "License successfully added to $O365user" -ForegroundColor Yellow
+    $UPN = $O365User.UPN
+    get-msoluser -userprincipalname $UPN | Set-Msoluser -UsageLocation $365UsageLocation
+    Write-Host "Set UsageLocation for $UPN to $365UsageLocation" -ForegroundColor Green
+    get-msoluser -userprincipalname $UPN | Set-Msoluserlicense -AddLicenses "$licenseSku"
+    Write-Host "License successfully added to $UPN" -ForegroundColor Yellow
 }

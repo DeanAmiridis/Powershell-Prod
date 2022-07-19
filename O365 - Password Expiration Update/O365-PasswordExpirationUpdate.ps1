@@ -6,7 +6,7 @@ Connect-MsolService # Comment out if you plan on running the script while alread
 $PassExpiration = $True
 
 # ---- Data Import ----
-$UPNs = Import-Csv -Path '.\UPN-import.csv' -Header @("UPN")
+$UPNs = Import-Csv -Path '.\UPN-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $UPNsCount = $UPNs.Count - 1
 Write-Host "Total Imported Accounts: $UPNsCount" -ForegroundColor "yellow"
@@ -16,7 +16,8 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $UPN in $UPNs ) { 
-    Get-MsolUser -UserPrincipalName $UPN.upn | Set-MsolUser -PasswordNeverExpires $PassExpiration
+foreach ( $UPN in $UPNs ) {
+    $UPN = $UPN.UPN
+    Get-MsolUser -UserPrincipalName $upn | Set-MsolUser -PasswordNeverExpires $PassExpiration
     Write-Host "Disabled Password Expiration for $UPN" -ForegroundColor Green
 }  

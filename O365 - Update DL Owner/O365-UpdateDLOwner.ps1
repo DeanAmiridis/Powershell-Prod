@@ -5,7 +5,7 @@
 # ---- DO NOT TOUCH THE ABOVE! ----
 
 # ---- Data Import ----
-$DLs = Import-Csv -Path '.\DL-import.csv' -Delimiter '|'  -Header @("Name", "Managedby")
+$DLs = Import-Csv -Path '.\DL-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $DLsCount = $DLs.Count
 Write-Host "Total Imported Accounts: $DLsCount" -ForegroundColor "yellow"
@@ -16,5 +16,7 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $DL in $DLs ) {
-    Set-DistributionGroup -Identity $DL.Name -Managedby $DL.Managedby
+    $Name = $DL.Name
+    $Managedby = $DL.Managedby
+    Set-DistributionGroup -Identity $Name -Managedby $Managedby
 }

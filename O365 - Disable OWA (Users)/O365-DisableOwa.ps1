@@ -12,7 +12,7 @@
 
 # ---- Import of the CSV File ----
 # Example of CSV File line: John Doe
-$O365UserLists = Import-Csv -Path '.\User-import.csv' -Delimiter '|'  -Header @("Name")
+$O365UserLists = Import-Csv -Path '.\User-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $O365UserListsCount = $O365UserLists.Count
 Write-Host "Total Imported Accounts: $O365UserListsCount" -ForegroundColor "yellow"
@@ -23,6 +23,7 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $O365UserList in $O365UserLists ) {
-    Set-CasMailbox $O365UserList.Name -OWAEnabled $false
-    Write-Host "OWA Access disabled for user account $O365UserList.Name" -ForegroundColor "Green"
+    $Name = $O365UserList.Name
+    Set-CasMailbox $Name -OWAEnabled $false
+    Write-Host "OWA Access disabled for user account $Name" -ForegroundColor "Green"
 }

@@ -2,7 +2,7 @@
 #Connect-MsolService
 
 # ---- Data Import Start  ----
-$Accounts = Import-Csv -Path '.\account-import.csv' -Header @("Username")
+$Accounts = Import-Csv -Path '.\account-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $AccountsCount = $Accounts.Count - 1
 Write-Host "Total Imported Accounts: $AccountsCount" -ForegroundColor "yellow"
@@ -19,6 +19,7 @@ $sta = @($st)
 
 # ---- Actions ----
 foreach ( $Account in $Accounts ) {
-    Set-MsolUser -UserPrincipalName $Account.Username -StrongAuthenticationRequirements $sta
-    write-host "Completed enabling $Account.Username..."
+    $Username = $Account.Username
+    Set-MsolUser -UserPrincipalName $Username -StrongAuthenticationRequirements $sta
+    write-host "Completed enabling $Username..."
 }

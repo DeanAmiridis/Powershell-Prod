@@ -5,7 +5,7 @@
 # ---- DO NOT TOUCH THE ABOVE! ----
 
 # ---- Data Import ----
-$DLs = Import-Csv -Path '.\DL-import.csv' -Delimiter '|'  -Header @("Name", "PrimarySmtpAddress", "Managedby")
+$DLs = Import-Csv -Path '.\DL-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $DLsCount = $DLs.Count
 Write-Host "Total Imported Accounts: $DLsCount" -ForegroundColor "yellow"
@@ -15,6 +15,9 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $DL in $DLs ) { 
-    New-DistributionGroup -Name $DL.Name -DisplayName $DL.Name -PrimarySmtpAddress $DL.PrimarySmtpAddress -Type Distribution -Managedby $DL.Managedby
+foreach ( $DL in $DLs ) {
+    $Name = $DL.Name
+    $PrimarySmtpAddress = $DL.PrimarySmtpAddress
+    $Managedby = $DL.Managedby
+    New-DistributionGroup -Name $Name -DisplayName $Name -PrimarySmtpAddress $PrimarySmtpAddress -Type Distribution -Managedby $Managedby
 }  

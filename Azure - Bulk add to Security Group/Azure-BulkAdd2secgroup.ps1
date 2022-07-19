@@ -9,12 +9,14 @@
 # 999-aaa-123|999-bbb-123
 
 # ---- Data Import ----
-$Users = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("ObjectID", "RefObjectID")
+$Users = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 # ---- Data Import End ----
 
 # ---- Action ----
 foreach ( $User in $Users ) {
-    Add-AzureADgroupmember -ObjectId $user.objectId -RefObjectId $User.RefObjectId
-    Write-Host "Successfully added user $User.RefObjectId to group $user.objectId" -ForegroundColor "green"
+    $objectID = $User.ObjectID
+    $RefObjectID = $User.RefObjectID
+    Add-AzureADgroupmember -ObjectId $objectId -RefObjectId $RefObjectId
+    Write-Host "Successfully added user $RefObjectId to group $objectId" -ForegroundColor "green"
 }
