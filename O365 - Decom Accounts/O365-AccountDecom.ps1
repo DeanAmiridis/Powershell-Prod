@@ -11,15 +11,9 @@
 #Connect-MsolService
 # ---- DO NOT TOUCH THE ABOVE! ----
 
-# The user-import.csv needs to be in the same path as the ps1 file.
-# each line of the csv needs to be as follows (Name|Upn) **
-# Example: 
-# Joe.Smith|joe.smith@alteonhealth.com
-# Mary.Smith|mary.smith@alteonhealth.com
-
 # ---- Data Import ----
 $ErrorActionPreference = "SilentlyContinue"
-$UserAccounts = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("Name", "UPN")
+$UserAccounts = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $UserAccountsCount = $UserAccounts.Count
 Write-Host "Total Imported Accounts: $UserAccountsCount" -ForegroundColor "yellow"
@@ -29,26 +23,28 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $UserAccount in $UserAccounts ) { 
-    Write-Host "Removing Licenses for $UserAccount.Name" -ForegroundColor "Yellow"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:VISIOCLIENT"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:POWER_BI_PRO"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:ENTERPRISEPACK"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:DESKLESSPACK"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:FLOW_FREE"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:RIGHTSMANAGEMENT"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:POWERAPPS_VIRAL"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:MS_TEAMS_IW"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:POWER_BI_STANDARD"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:OFFICESUBSCRIPTION"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:SPE_E3"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:O365_BUSINESS_ESSENTIALS"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:EXCHANGEENTERPRISE"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:SPE_F1"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:TEAMS_COMMERCIAL_TRIAL"
-    Set-MsolUserLicense -UserPrincipalName $UserAccount.UPN -RemoveLicenses "reseller-account:STANDARDPACK"
-    Write-Host "Setting mailbox for $UserAccount.Name to a Shared mailbox" -ForegroundColor "white"
-    Set-Mailbox $UserAccount.UPN -Type Shared -LitigationHoldEnabled $True # Set's the mailbox to shared with Litigation Hold
-    Write-Host "Disabling login access for: $UserAccount.Name" -ForegroundColor "Green"
-    Set-AzureADUser -ObjectID $UserAccount.UPN -AccountEnabled $False # Disables login on account
+foreach ( $UserAccount in $UserAccounts ) {
+    $Name = $UserAccount.Name
+    $UPN = $UserAccount.UPN
+    Write-Host "Removing Licenses for $Name" -ForegroundColor "Yellow"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:VISIOCLIENT"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:POWER_BI_PRO"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:ENTERPRISEPACK"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:DESKLESSPACK"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:FLOW_FREE"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:RIGHTSMANAGEMENT"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:POWERAPPS_VIRAL"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:MS_TEAMS_IW"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:POWER_BI_STANDARD"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:OFFICESUBSCRIPTION"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:SPE_E3"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:O365_BUSINESS_ESSENTIALS"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:EXCHANGEENTERPRISE"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:SPE_F1"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:TEAMS_COMMERCIAL_TRIAL"
+    Set-MsolUserLicense -UserPrincipalName $UPN -RemoveLicenses "reseller-account:STANDARDPACK"
+    Write-Host "Setting mailbox for $Name to a Shared mailbox" -ForegroundColor "white"
+    Set-Mailbox $UPN -Type Shared -LitigationHoldEnabled $True # Set's the mailbox to shared with Litigation Hold
+    Write-Host "Disabling login access for: $Name" -ForegroundColor "Green"
+    Set-AzureADUser -ObjectID $UPN -AccountEnabled $False # Disables login on account
 } 

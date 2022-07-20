@@ -10,7 +10,7 @@
 # ---- Data Import ----
 $ErrorActionPreference = "SilentlyContinue"
 Clear-Host # Start with clean powershell
-$UserAccounts = Import-Csv -Path '.\user-import.csv' -Delimiter '|'  -Header @("Name", "samAccountName")
+$UserAccounts = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $UserAccountsCount = $UserAccounts.Count
 Write-Host "Total Imported Accounts: $UserAccountsCount" -ForegroundColor "yellow"
@@ -20,9 +20,11 @@ if ( $response -ne "Y" ) { exit }
 # ---- Data Import End ----
 
 # ---- Action ----
-foreach ( $UserAccount in $UserAccounts ) { 
-    Write-Host "Target user: $UserAccount.Name" -ForegroundColor "Yellow"
-    Set-ADUser -Identity $UserAccount.samAccountName -ChangePasswordAtLogon $true
-    Write-Host "Successfully set password change at next login for: $UserAccount.Name" -ForegroundColor "Green"
+foreach ( $UserAccount in $UserAccounts ) {
+    $Name = $UserAccount.Name
+    $samAccountName = $UserAccount.samAccountName
+    Write-Host "Target user: $Name" -ForegroundColor "Yellow"
+    Set-ADUser -Identity $samAccountName -ChangePasswordAtLogon $true
+    Write-Host "Successfully set password change at next login for: $Name" -ForegroundColor "Green"
     Write-Host " "
 } 

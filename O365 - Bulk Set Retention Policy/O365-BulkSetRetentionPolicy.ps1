@@ -6,7 +6,7 @@ Connect-ExchangeOnline # Comment out if you plan on running the script while alr
 $RetentionPolicyName = ""
 
 # ---- Data Import ----
-$Users = Import-Csv -Path '.\user-import.csv' -Header @("UPN")
+$Users = Import-Csv -Path '.\user-import.csv'
 Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 $UsersCount = $Users.Count - 1
 Write-Host "Total Imported Accounts: $UsersCount" -ForegroundColor "yellow"
@@ -17,8 +17,9 @@ if ( $response -ne "Y" ) { exit }
 
 # ---- Action ----
 foreach ( $User in $Users ) {
-    Set-Mailbox -Identity $User.UPN -RetentionPolicy $RetentionPolicyName
-    Write-Host "Retention Policy set for $User.UPN" -ForegroundColor Green
-    Start-ManagedFolderAssistant -Identity $User.UPN
-    Write-Host "Folder Assistant restarted for $User.UPN" -ForegroundColor Yellow
+    $UPN = $User.UPN
+    Set-Mailbox -Identity $UPN -RetentionPolicy $RetentionPolicyName
+    Write-Host "Retention Policy set for $UPN" -ForegroundColor Green
+    Start-ManagedFolderAssistant -Identity $UPN
+    Write-Host "Folder Assistant restarted for $UPN" -ForegroundColor Yellow
 }
