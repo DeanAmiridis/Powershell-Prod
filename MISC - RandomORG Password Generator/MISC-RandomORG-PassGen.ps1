@@ -5,8 +5,8 @@
 # Actions
 [CmdletBinding()]
 Param(
-  [string]$PassQTY,
-  [string]$PassLen
+    [string]$PassQTY,
+    [string]$PassLen
 )
 $PassGenerate = Invoke-WebRequest "https://www.random.org/passwords/?num=$PassQTY&len=$PassLen&format=plain&rnd=new"
 Write-Host $PassGenerate.Content
