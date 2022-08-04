@@ -1,6 +1,13 @@
+# Example: .\MISC-RandomORG-PassGen.ps1 -PassQTY 5 -PassLen 15
+# The above line will generate 5 passwords, with a length of 15 per password.
+#
+#
 # Actions
-$PassQTY = Read-Host -Prompt 'How many passwords do you need? (ex: 20)'
-$PassLen = Read-Host -Prompt 'How long do you need the passwords to be? (ex: 12)'
+[CmdletBinding()]
+Param(
+  [string]$PassQTY,
+  [string]$PassLen
+)
 $PassGenerate = Invoke-WebRequest "https://www.random.org/passwords/?num=$PassQTY&len=$PassLen&format=plain&rnd=new"
 Write-Host $PassGenerate.Content
 $OutFileRequest = Read-Host -Prompt 'Would you like to save the passwords to a text file? (y/n)'
