@@ -11,5 +11,5 @@ $Groups | ForEach-Object {
             Member        = $_.Name
             EmailAddress  = $_.PrimarySMTPAddress
             RecipientType = $_.RecipientType
-        }}} |
-    Export-CSV "HVA-GroupInfo.csv" -NoTypeInformation
+        } } } |
+Export-CSV ".\O365-Groups.csv" -NoTypeInformation
