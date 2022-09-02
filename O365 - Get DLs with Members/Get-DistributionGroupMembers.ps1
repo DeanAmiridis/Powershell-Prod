@@ -1,21 +1,6 @@
-﻿################################################################################################################################################################ 
-# Script accepts 2 parameters from the command line 
-# 
-# Office365Username - Optional - Administrator login ID for the tenant we are querying 
-# Office365Password - Optional - Administrator login password for the tenant we are querying 
-# 
-# 
-# To run the script 
-# 
-# .\Get-DistributionGroupMembers.ps1 [-Office365Username admin@xxxxxx.onmicrosoft.com] [-Office365Password Password123]
-# 
-# 
-# Author:                 Alan Byrne 
-# Version:                 2.0 
-# Last Modified Date:     16/08/2014 
-# Last Modified By:     Alan Byrne alan@cogmotive.com 
-################################################################################################################################################################ 
- 
+﻿# NOT DEVELOPED BY ME; I AM ONLY USING THIS TO TEST THE CODE
+# PENDING MOVE TO DEVELOPMENT BRANCH
+
 #Accept input parameters 
 Param( 
     [Parameter(Position = 0, Mandatory = $false, ValueFromPipeline = $true)] 
