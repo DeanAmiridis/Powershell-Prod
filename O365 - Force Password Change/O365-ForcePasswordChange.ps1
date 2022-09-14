@@ -16,6 +16,6 @@ if ( $response -ne "Y" ) { exit }
 # ---- Actions ----
 foreach ( $Account in $Accounts ) {
     $Username = $Account.UserPrincipalName
-    Set-MsolUser -UserPrincipalName $Username -StrongPasswordRequired:$true
+    Set-MsolUserPassword -UserPrincipalName $Username -ForceChangePassword:$true
     Write-Host "Password Reset Required for $Username" -ForegroundColor "green"
 }
