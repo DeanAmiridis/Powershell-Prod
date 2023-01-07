@@ -6,3 +6,5 @@ EXCH-GetDLInfo/DL_info.csv
 *.csv
 AD - UPN Updater/AD-UPN_Updater.ps1
 *.txt
+.vscode/settings.json
+.gitignore
