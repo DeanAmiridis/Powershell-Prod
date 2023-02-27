@@ -12,6 +12,8 @@
     <br />
     <a href="https://github.com/deanamiridis/Powershell/issues">Report Bug</a>
     ·
-      <a href="http://gitrequest.aselectfew.com">Request a Script</a>
+      <a href="http://gitrequest.aselectfew.com">Request a Script</a></p>
+      <p align="center">
+<a href='https://ko-fi.com/N4N1IZL09' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi2.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>      
   </p>
 </p>
