@@ -6,6 +6,8 @@
 # Install-Module MSOnline
 # Alternatively you can use the AzureAD Module. If you do not have it installed, run the following command:
 # Install-Module AzureAD
+# If you are using AzureAD Module, change line 25 to:
+# Remove-AzureADUser -ObjectID $Username -Force
 #
 # ---- Import of the CSV File ----
 # Example of CSV File line: Dean Amiridis|dean.amiridis@mind-shift.com
