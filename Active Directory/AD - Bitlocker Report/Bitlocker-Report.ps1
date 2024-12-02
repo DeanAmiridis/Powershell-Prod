@@ -9,16 +9,23 @@ Write-Host "Imported Active Directory Module ..." -ForegroundColor Yellow
 Write-Host "Running Bitlocker Report ..." -ForegroundColor Yellow
 
 # Variables
-$Computers = get-adcomputer -filter *
-$CurrentDate = (Get-Date).ToString("yyyy_MM_dd-hh_mm")
-$DC = Hostname
+$Computers = Get-ADComputer -Filter { msFVE-RecoveryInformation -like '*' }
+$CurrentDate = (Get-Date).ToString("yyyy_MM_dd-HH_mm")
+$DC = $env:COMPUTERNAME
 $Counter = 0
 
 # Code Execution
 ForEach ($Computer in $Computers) {
-    Get-ADobject -Searchbase $computer -Filter { objectclass -eq 'msFVE-RecoveryInformation' } -Properties msFVE-RecoveryPassword, WhenCreated | Select-Object @{name = "Computer Name"; Expression = { $computer.name } }, WhenCreated, msFVE-RecoveryPassword | Export-CSV $DC-Bitlocker-Report_$CurrentDate.csv -Append -NoTypeInformation
+    Try {
+        Get-ADObject -SearchBase $Computer.DistinguishedName -Filter { objectclass -eq 'msFVE-RecoveryInformation' } -Properties msFVE-RecoveryPassword, WhenCreated | 
+        Select-Object @{Name = "Computer Name"; Expression = { $Computer.Name } }, WhenCreated, msFVE-RecoveryPassword | 
+        Export-CSV "$DC-Bitlocker-Report_$CurrentDate.csv" -Append -NoTypeInformation
+    }
+    Catch {
+        Write-Host "Error processing $($Computer.Name): $_" -ForegroundColor Red
+    }
     $Counter++
-    Write-Progress -Activity 'Scanning bitlocker data...' -CurrentOperation $Computer -PercentComplete (($counter / $Computers.count) * 100)
+    Write-Progress -Activity 'Scanning bitlocker data...' -CurrentOperation $Computer.Name -PercentComplete (($Counter / $Computers.Count) * 100)
 }
 
 # End Script/Identification
