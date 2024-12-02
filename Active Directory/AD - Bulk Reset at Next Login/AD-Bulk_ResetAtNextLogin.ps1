@@ -3,7 +3,7 @@
 #
 # The user-import.csv needs to be in the same path as the ps1 file.
 # each line of the csv needs to be as follows (Name|AD_Account_Name) **
-# Example: 
+# Example:
 # Joe Smith|dean.amiridis
 # Mary Smith|mary.smith
 
