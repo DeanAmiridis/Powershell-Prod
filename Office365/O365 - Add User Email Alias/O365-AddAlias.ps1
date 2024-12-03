@@ -25,5 +25,13 @@ if ( $response -ne "Y" ) { exit }
 foreach ( $O365UserList in $O365UserLists ) {
     $Name = $O365UserList.Name
     $Alias = $O365UserList.Alias
-    Set-Mailbox "$Name" -EmailAddresses @{add="$Alias"}
+    try {
+        Set-Mailbox "$Name" -EmailAddresses @{add = "$Alias" }
+        Write-Host "Successfully added alias $Alias to $Name" -ForegroundColor "green"
+        Add-Content -Path '.\log.txt' -Value "[$(Get-Date)] Successfully added alias $Alias to $Name"
+    }
+    catch {
+        Write-Host "Failed to add alias $Alias to $Name" -ForegroundColor "red"
+        Add-Content -Path '.\log.txt' -Value "[$(Get-Date)] Failed to add alias $Alias to $Name"
+    }
 }

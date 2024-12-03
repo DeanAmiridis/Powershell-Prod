@@ -17,6 +17,13 @@ Write-Host "CSV Imported Successfully" -ForegroundColor "green"
 foreach ( $User in $Users ) {
     $objectID = $User.ObjectID
     $RefObjectID = $User.RefObjectID
-    Add-AzureADgroupmember -ObjectId $objectId -RefObjectId $RefObjectId
-    Write-Host "Successfully added user $RefObjectId to group $objectId" -ForegroundColor "green"
+    try {
+        Add-AzureADgroupmember -ObjectId $objectID -RefObjectId $RefObjectID
+        Write-Host "Successfully added user $RefObjectID to group $objectID" -ForegroundColor "green"
+        Add-Content -Path '.\log.txt' -Value "Successfully added user $RefObjectID to group $objectID"
+    }
+    catch {
+        Write-Host "Failed to add user $RefObjectID to group $objectID" -ForegroundColor "red"
+        Add-Content -Path '.\log.txt' -Value "Failed to add user $RefObjectID to group $objectID"
+    }
 }
