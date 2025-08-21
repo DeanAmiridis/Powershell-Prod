@@ -18,10 +18,10 @@
     Include disabled computer accounts in the report.
 
 .EXAMPLE
-    .\Bitlocker-Report-Improved.ps1
+    .\Bitlocker-Report-v2.ps1
     
 .EXAMPLE
-    .\Bitlocker-Report-Improved.ps1 -OutputPath "C:\Reports" -Verbose
+    .\Bitlocker-Report-v2.ps1 -OutputPath "C:\Reports" -Verbose
 
 .NOTES
     - Script should be run on a domain controller with BitLocker Management roles installed
