@@ -20,10 +20,10 @@
     Enable verbose output for detailed progress information.
 
 .EXAMPLE
-    .\ADGPOExportAllEnabled-Improved.ps1 -OutputPath "C:\Reports\GPO_Report.csv"
+    .\ADGPOExportAllEnabled.ps1 -OutputPath "C:\Reports\GPO_Report.csv"
 
 .EXAMPLE
-    .\ADGPOExportAllEnabled-Improved.ps1 -IncludeDisabledGPOs -Verbose
+    .\ADGPOExportAllEnabled.ps1 -IncludeDisabledGPOs -Verbose
 
 .NOTES
     - Requires GroupPolicy module
