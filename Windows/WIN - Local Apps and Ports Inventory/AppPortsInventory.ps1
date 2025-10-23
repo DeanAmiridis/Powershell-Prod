@@ -1,11 +1,11 @@
-<# 
-AppPortsInventory_Dual_Fixed.ps1
+<#
+AppPortsInventory.ps1
 Dual-mode script for Windows PowerShell 5.1 and PowerShell 7+.
 - Uses PS5.1-safe syntax everywhere (so it runs on both)
-- Fixes collision with $PID automatic variable (renamed param to $procId)
-- Fixes inline if-expression by pre-assigning $note variable
+- Includes IIS binding inventory
+
 USAGE:
-  .\AppPortsInventory_Dual_Fixed.ps1 -OutputPath "C:\Temp\AppPorts" -IncludeUDP -ExcludeSystem:$false
+.\AppPortsInventory.ps1 -OutputPath "C:\Temp\AppPorts" -IncludeUDP -ExcludeSystem:$false
 #>
 
 param(
@@ -32,6 +32,7 @@ function Run-AppPortsInventory {
     $log = Join-Path $OutputPath "Log_${server}_$ts.txt"
     $csvApp = Join-Path $OutputPath "AppInventory_${server}_$ts.csv"
     $csvPort = Join-Path $OutputPath "PortInventory_${server}_$ts.csv"
+    $csvIIS = Join-Path $OutputPath "IISBindings_${server}_$ts.csv"
     $csvSug = Join-Path $OutputPath "SuggestedRules_${server}_$ts.csv"
 
     "[$(Get-Date -Format o)] Start inventory on $server (PS $($PSVersionTable.PSVersion))" | Out-File -FilePath $log -Encoding UTF8
@@ -180,6 +181,145 @@ function Run-AppPortsInventory {
         "$app|$exe|$Protocol"
     }
 
+    function Get-IISBindings {
+        param([string]$IISPath)
+        $bindings = @()
+        
+        # Check if IIS is installed
+        $iisInstalled = $false
+        try {
+            if (Test-Path $IISPath) {
+                $iisInstalled = $true
+            }
+        }
+        catch { }
+
+        if (-not $iisInstalled) {
+            Write-Log "IIS not detected on this server"
+            $bindings += [PSCustomObject]@{
+                SiteName        = 'N/A'
+                Binding         = 'N/A'
+                Protocol        = 'N/A'
+                Port            = 'N/A'
+                IPAddress       = 'N/A'
+                HostHeader      = 'N/A'
+                RedirectType    = 'IIS Installation not detected'
+                RedirectTarget  = 'N/A'
+                ApplicationPool = 'N/A'
+            }
+            return $bindings
+        }
+
+        try {
+            Import-Module WebAdministration -ErrorAction Stop
+            Write-Log "WebAdministration module loaded"
+        }
+        catch {
+            Write-Log "WebAdministration module not available"
+            $bindings += [PSCustomObject]@{
+                SiteName        = 'N/A'
+                Binding         = 'N/A'
+                Protocol        = 'N/A'
+                Port            = 'N/A'
+                IPAddress       = 'N/A'
+                HostHeader      = 'N/A'
+                RedirectType    = 'IIS Installation not detected'
+                RedirectTarget  = 'N/A'
+                ApplicationPool = 'N/A'
+            }
+            return $bindings
+        }
+
+        try {
+            $sites = Get-Item IIS:\Sites -ErrorAction SilentlyContinue
+            if ($sites) {
+                foreach ($site in $sites) {
+                    $siteName = $site.Name
+                    $appPool = $site.ApplicationPool
+                    
+                    # Extract bindings
+                    if ($site.Bindings.Collection) {
+                        foreach ($binding in $site.Bindings.Collection) {
+                            $protocol = $binding.Protocol
+                            $bindingInfo = $binding.BindingInformation
+                            
+                            if ($bindingInfo -match '^(.*?):(\d+):(.*)$') {
+                                $ip = if ([string]::IsNullOrWhiteSpace($Matches[1]) -or $Matches[1] -eq '*') { '0.0.0.0' } else { $Matches[1] }
+                                $port = [int]$Matches[2]
+                                $hostHeader = if ([string]::IsNullOrWhiteSpace($Matches[3])) { '(All Unassigned)' } else { $Matches[3] }
+                            }
+                            else {
+                                $ip = '0.0.0.0'
+                                $port = if ($protocol -eq 'https') { 443 } else { 80 }
+                                $hostHeader = '(Parse Error)'
+                            }
+                            
+                            $bindings += [PSCustomObject]@{
+                                SiteName        = $siteName
+                                Binding         = $bindingInfo
+                                Protocol        = $protocol
+                                Port            = $port
+                                IPAddress       = $ip
+                                HostHeader      = $hostHeader
+                                RedirectType    = 'Standard Binding'
+                                RedirectTarget  = 'N/A'
+                                ApplicationPool = $appPool
+                            }
+                        }
+                    }
+                    
+                    # Check for URL Rewrite and HTTP Redirect rules
+                    try {
+                        $vdir = Get-WebVirtualDirectory -Site $siteName -ErrorAction SilentlyContinue
+                        if ($vdir) {
+                            foreach ($v in $vdir) {
+                                $vdirPath = "IIS:\Sites\$siteName\$($v.Name)"
+                                $httpRedirect = Get-WebConfigurationProperty -PSPath $vdirPath -Filter 'system.webServer/httpRedirect' -Name '*' -ErrorAction SilentlyContinue
+                                
+                                if ($httpRedirect -and $httpRedirect.enabled -eq $true) {
+                                    $destination = $httpRedirect.destination
+                                    if (-not [string]::IsNullOrWhiteSpace($destination)) {
+                                        $bindings += [PSCustomObject]@{
+                                            SiteName        = $siteName
+                                            Binding         = "$($v.Name) (Virtual Directory)"
+                                            Protocol        = 'HTTP/HTTPS'
+                                            Port            = 'Multiple'
+                                            IPAddress       = '0.0.0.0'
+                                            HostHeader      = $v.Name
+                                            RedirectType    = "HTTP Redirect (Status: $($httpRedirect.exactDestination))"
+                                            RedirectTarget  = $destination
+                                            ApplicationPool = $appPool
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+        catch {
+            Write-Log "Error retrieving IIS bindings: $_"
+        }
+
+        if ($bindings.Count -eq 0) {
+            $bindings += [PSCustomObject]@{
+                SiteName        = 'N/A'
+                Binding         = 'N/A'
+                Protocol        = 'N/A'
+                Port            = 'N/A'
+                IPAddress       = 'N/A'
+                HostHeader      = 'N/A'
+                RedirectType    = 'IIS Installation not detected'
+                RedirectTarget  = 'N/A'
+                ApplicationPool = 'N/A'
+            }
+        }
+
+        return $bindings
+    }
+
     $portRows = New-Object System.Collections.Generic.List[object]
 
     try {
@@ -187,6 +327,11 @@ function Run-AppPortsInventory {
         $apps = Get-InstalledApps
         $apps | Export-Csv -NoTypeInformation -Encoding UTF8 -Path $csvApp
         Write-Log "App inventory: $csvApp"
+
+        Write-Log "Collecting IIS bindings..."
+        $iisBindings = Get-IISBindings -IISPath 'HKLM:\SOFTWARE\Microsoft\InetStp'
+        $iisBindings | Export-Csv -NoTypeInformation -Encoding UTF8 -Path $csvIIS
+        Write-Log "IIS inventory: $csvIIS"
 
         Write-Log "Collecting listeners..."
         $listeners = Get-Listeners
@@ -279,11 +424,49 @@ function Run-AppPortsInventory {
             }
         }
 
+        # Add IIS bindings to suggested rules
+        if ($iisBindings -and $iisBindings.Count -gt 0) {
+            $iisRules = foreach ($binding in $iisBindings) {
+                if ($binding.RedirectType -eq 'IIS Installation not detected') {
+                    [PSCustomObject]@{
+                        ComputerName = $env:COMPUTERNAME
+                        RuleName     = 'Allow - IIS - IIS Installation not detected'
+                        Program      = 'N/A'
+                        Protocol     = 'N/A'
+                        LocalPorts   = 'N/A'
+                        Profile      = 'N/A'
+                        Direction    = 'N/A'
+                        ServiceName  = 'N/A'
+                        Publisher    = 'N/A'
+                        Note         = 'IIS Installation not detected'
+                    }
+                }
+                else {
+                    $portInfo = if ($binding.Port -eq 'Multiple') { 'Multiple' } else { [string]$binding.Port }
+                    $redirectNote = if ($binding.RedirectType -ne 'Standard Binding') { " - Redirect: $($binding.RedirectTarget)" } else { '' }
+                    
+                    [PSCustomObject]@{
+                        ComputerName = $env:COMPUTERNAME
+                        RuleName     = ("Allow - IIS - {0} - {1} - {2}" -f $binding.SiteName, $binding.Protocol.ToUpper(), $portInfo) -replace '[^\w\s\-\(\)\.,]', ''
+                        Program      = 'C:\Windows\System32\inetsrv\w3wp.exe'
+                        Protocol     = $binding.Protocol
+                        LocalPorts   = $portInfo
+                        Profile      = 'Any'
+                        Direction    = 'Inbound'
+                        ServiceName  = 'W3SVC'
+                        Publisher    = 'Microsoft'
+                        Note         = "Site: $($binding.SiteName), Host: $($binding.HostHeader), Type: $($binding.RedirectType)$redirectNote"
+                    }
+                }
+            }
+            $suggested = @($suggested) + @($iisRules)
+        }
+
         $suggested | Sort-Object RuleName | Export-Csv -NoTypeInformation -Encoding UTF8 -Path $csvSug
         Write-Log "Suggested (data only) rules: $csvSug"
 
         Write-Log "Done."
-        Write-Host "Inventory complete.`n- Apps: $csvApp`n- Ports: $csvPort`n- Suggested: $csvSug`n- Log: $log"
+        Write-Host "Inventory complete.`n- Apps: $csvApp`n- Ports: $csvPort`n- IIS Bindings: $csvIIS`n- Suggested: $csvSug`n- Log: $log"
     }
     catch {
         Write-Log "ERROR: $($_.Exception.Message)"
