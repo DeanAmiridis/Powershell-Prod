@@ -279,6 +279,106 @@ function Run-AppPortsInventory {
         }
     }
 
+    function Test-ApplicationFirewallRule {
+        param([string]$Program)
+        
+        if (-not $Program -or $Program -eq 'N/A') {
+            return $false
+        }
+
+        try {
+            $appRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -Program $Program -ErrorAction SilentlyContinue)
+            return ($appRules.Count -gt 0)
+        }
+        catch {
+            return $false
+        }
+    }
+
+    function Test-PortFirewallRule {
+        param(
+            [string]$Protocol,
+            [string]$LocalPorts
+        )
+        
+        if (-not $LocalPorts -or $LocalPorts -eq 'N/A' -or $LocalPorts -eq 'Multiple') {
+            return $false
+        }
+
+        try {
+            $portNumbers = @($LocalPorts -split ',' | ForEach-Object { $_.Trim() })
+            $requiredPorts = @()
+            
+            foreach ($p in $portNumbers) {
+                $portInt = 0
+                if ([int]::TryParse($p, [ref]$portInt)) {
+                    $requiredPorts += $portInt
+                }
+            }
+
+            if ($requiredPorts.Count -eq 0) {
+                return $false
+            }
+
+            # Get all inbound allow rules
+            $allRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue)
+            if ($allRules.Count -eq 0) {
+                return $false
+            }
+
+            # Check each required port
+            foreach ($requiredPort in $requiredPorts) {
+                $portFound = $false
+
+                foreach ($rule in $allRules) {
+                    $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
+                    if (-not $portFilter) {
+                        continue
+                    }
+
+                    # Check protocol match
+                    $protocolMatches = ($portFilter.Protocol -eq $Protocol -or $portFilter.Protocol -eq 'Any')
+                    if (-not $protocolMatches) {
+                        continue
+                    }
+
+                    # Check port match
+                    $portFilterValue = [string]$portFilter.LocalPort
+                    
+                    if ($portFilterValue -eq 'Any') {
+                        $portFound = $true
+                        break
+                    }
+                    elseif ($portFilterValue -eq $requiredPort.ToString()) {
+                        $portFound = $true
+                        break
+                    }
+                    elseif ($portFilterValue -match '^\d+-\d+$') {
+                        $range = $portFilterValue -split '-'
+                        if ($range.Count -eq 2) {
+                            $rangeStart = [int]$range[0]
+                            $rangeEnd = [int]$range[1]
+                            if ($requiredPort -ge $rangeStart -and $requiredPort -le $rangeEnd) {
+                                $portFound = $true
+                                break
+                            }
+                        }
+                    }
+                }
+
+                # If any port not found, return FALSE
+                if (-not $portFound) {
+                    return $false
+                }
+            }
+
+            return $true
+        }
+        catch {
+            return $false
+        }
+    }
+
     function Get-IISBindings {
         param([string]$IISPath)
         $bindings = @()
@@ -507,20 +607,22 @@ function Run-AppPortsInventory {
             $appName = Coalesce $r.AppDisplayName 'UnknownApp'
             $ports = ($r.Ports | Sort-Object) -join ','
             $note = if ($r.ExePath) { 'Prefer Program-based rule' } else { 'No EXE path found; use Port-based rule' }
-            $fwRuleExists = Test-ExistingFirewallRule -Program $r.ExePath -Protocol $r.Protocol -LocalPorts $ports
+            $appRuleFound = Test-ApplicationFirewallRule -Program $r.ExePath
+            $portRuleFound = Test-PortFirewallRule -Protocol $r.Protocol -LocalPorts $ports
 
             [PSCustomObject]@{
-                ComputerName      = $r.ComputerName
-                RuleName          = ("Allow - {0} - {1} {2}" -f $appName, $r.Protocol, $ports) -replace '[^\w\s\-\(\)\.,]', ''
-                Program           = $r.ExePath
-                Protocol          = $r.Protocol
-                LocalPorts        = $ports
-                Profile           = 'Any'
-                Direction         = 'Inbound'
-                ServiceName       = $r.ServiceName
-                Publisher         = $r.Publisher
-                ExistingRuleFound = $fwRuleExists
-                Note              = $note
+                ComputerName          = $r.ComputerName
+                RuleName              = ("Allow - {0} - {1} {2}" -f $appName, $r.Protocol, $ports) -replace '[^\w\s\-\(\)\.,]', ''
+                Program               = $r.ExePath
+                Protocol              = $r.Protocol
+                LocalPorts            = $ports
+                Profile               = 'Any'
+                Direction             = 'Inbound'
+                ServiceName           = $r.ServiceName
+                Publisher             = $r.Publisher
+                ApplicationRuleExists = $appRuleFound
+                PortRuleExists        = $portRuleFound
+                Note                  = $note
             }
         }
 
@@ -529,36 +631,39 @@ function Run-AppPortsInventory {
             $iisRules = foreach ($binding in $iisBindings) {
                 if ($binding.RedirectType -eq 'IIS Installation not detected') {
                     [PSCustomObject]@{
-                        ComputerName      = $env:COMPUTERNAME
-                        RuleName          = 'Allow - IIS - IIS Installation not detected'
-                        Program           = 'N/A'
-                        Protocol          = 'N/A'
-                        LocalPorts        = 'N/A'
-                        Profile           = 'N/A'
-                        Direction         = 'N/A'
-                        ServiceName       = 'N/A'
-                        Publisher         = 'N/A'
-                        ExistingRuleFound = $false
-                        Note              = 'IIS Installation not detected'
+                        ComputerName          = $env:COMPUTERNAME
+                        RuleName              = 'Allow - IIS - IIS Installation not detected'
+                        Program               = 'N/A'
+                        Protocol              = 'N/A'
+                        LocalPorts            = 'N/A'
+                        Profile               = 'N/A'
+                        Direction             = 'N/A'
+                        ServiceName           = 'N/A'
+                        Publisher             = 'N/A'
+                        ApplicationRuleExists = $false
+                        PortRuleExists        = $false
+                        Note                  = 'IIS Installation not detected'
                     }
                 }
                 else {
                     $portInfo = if ($binding.Port -eq 'Multiple') { 'Multiple' } else { [string]$binding.Port }
                     $redirectNote = if ($binding.RedirectType -ne 'Standard Binding') { " - Redirect: $($binding.RedirectTarget)" } else { '' }
-                    $fwRuleExists = Test-ExistingFirewallRule -Program 'C:\Windows\System32\inetsrv\w3wp.exe' -Protocol $binding.Protocol -LocalPorts $portInfo
+                    $appRuleFound = Test-ApplicationFirewallRule -Program 'C:\Windows\System32\inetsrv\w3wp.exe'
+                    $portRuleFound = Test-PortFirewallRule -Protocol $binding.Protocol -LocalPorts $portInfo
                     
                     [PSCustomObject]@{
-                        ComputerName      = $env:COMPUTERNAME
-                        RuleName          = ("Allow - IIS - {0} - {1} - {2}" -f $binding.SiteName, $binding.Protocol.ToUpper(), $portInfo) -replace '[^\w\s\-\(\)\.,]', ''
-                        Program           = 'C:\Windows\System32\inetsrv\w3wp.exe'
-                        Protocol          = $binding.Protocol
-                        LocalPorts        = $portInfo
-                        Profile           = 'Any'
-                        Direction         = 'Inbound'
-                        ServiceName       = 'W3SVC'
-                        Publisher         = 'Microsoft'
-                        ExistingRuleFound = $fwRuleExists
-                        Note              = "Site: $($binding.SiteName), Host: $($binding.HostHeader), Type: $($binding.RedirectType)$redirectNote"
+                        ComputerName          = $env:COMPUTERNAME
+                        RuleName              = ("Allow - IIS - {0} - {1} - {2}" -f $binding.SiteName, $binding.Protocol.ToUpper(), $portInfo) -replace '[^\w\s\-\(\)\.,]', ''
+                        Program               = 'C:\Windows\System32\inetsrv\w3wp.exe'
+                        Protocol              = $binding.Protocol
+                        LocalPorts            = $portInfo
+                        Profile               = 'Any'
+                        Direction             = 'Inbound'
+                        ServiceName           = 'W3SVC'
+                        Publisher             = 'Microsoft'
+                        ApplicationRuleExists = $appRuleFound
+                        PortRuleExists        = $portRuleFound
+                        Note                  = "Site: $($binding.SiteName), Host: $($binding.HostHeader), Type: $($binding.RedirectType)$redirectNote"
                     }
                 }
             }
