@@ -333,66 +333,66 @@ function Run-AppPortsInventory {
                 return $false
             }
 
-            # Get all inbound allow rules - ONLY check rules with port filters
+            # Get all inbound allow rules with port filters
             $allRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue)
             if ($allRules.Count -eq 0) {
+                Write-Log "DEBUG: No inbound allow rules found at all"
                 return $false
             }
+
+            Write-Log "DEBUG: Checking $LocalPorts/$protocolLower - Found $($allRules.Count) inbound allow rules total"
 
             # Check EACH required port individually - ALL ports must have matching rules
             foreach ($requiredPort in $requiredPorts) {
                 $portFound = $false
+                $rulesChecked = 0
 
                 foreach ($rule in $allRules) {
                     $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
                     
-                    # Skip rules with no port filter (these are not port-specific rules)
+                    # Skip rules with no port filter
                     if (-not $portFilter) {
                         continue
                     }
 
-                    # First check: Protocol must match (case-insensitive)
+                    $rulesChecked++
                     $filterProtocolLower = $portFilter.Protocol.ToLower()
-                    if ($filterProtocolLower -ne $protocolLower -and $filterProtocolLower -ne 'any') {
+                    $portFilterValue = [string]$portFilter.LocalPort
+
+                    # Skip rules with 'Any' ports - we're looking for SPECIFIC port rules only
+                    if ($portFilterValue -eq 'Any') {
+                        Write-Log "DEBUG: Skipping rule with LocalPort=Any (too broad)"
                         continue
                     }
 
-                    # Second check: Port must match
-                    $portFilterValue = [string]$portFilter.LocalPort
-                    $localPortMatches = $false
-
-                    # Case 1: "Any" port means all ports allowed
-                    if ($portFilterValue -eq 'Any') {
-                        $localPortMatches = $true
-                    }
-                    # Case 2: Exact port match
-                    elseif ($portFilterValue -eq $requiredPort.ToString()) {
-                        $localPortMatches = $true
-                    }
-                    # Case 3: Port range
-                    elseif ($portFilterValue -match '^\d+-\d+$') {
-                        $parts = $portFilterValue -split '-'
-                        $rangeStart = [int]$parts[0]
-                        $rangeEnd = [int]$parts[1]
-                        if ($requiredPort -ge $rangeStart -and $requiredPort -le $rangeEnd) {
-                            $localPortMatches = $true
+                    # Check protocol match
+                    if ($filterProtocolLower -eq $protocolLower -or $filterProtocolLower -eq 'any') {
+                        # Protocol matches, now check port
+                        if ($portFilterValue -eq $requiredPort.ToString()) {
+                            Write-Log "DEBUG: Port $requiredPort/$protocolLower FOUND in rule (exact match)"
+                            $portFound = $true
+                            break
                         }
-                    }
-
-                    # If this rule matches both protocol and port, mark as found
-                    if ($localPortMatches) {
-                        $portFound = $true
-                        break
+                        elseif ($portFilterValue -match '^\d+-\d+$') {
+                            $parts = $portFilterValue -split '-'
+                            $rangeStart = [int]$parts[0]
+                            $rangeEnd = [int]$parts[1]
+                            if ($requiredPort -ge $rangeStart -and $requiredPort -le $rangeEnd) {
+                                Write-Log "DEBUG: Port $requiredPort/$protocolLower FOUND in range $portFilterValue"
+                                $portFound = $true
+                                break
+                            }
+                        }
                     }
                 }
 
-                # If THIS specific port was NOT found, return FALSE immediately
                 if (-not $portFound) {
+                    Write-Log "DEBUG: Port $requiredPort/$protocolLower NOT found (checked $rulesChecked port filters)"
                     return $false
                 }
             }
 
-            # All required ports have matching rules
+            Write-Log "DEBUG: All ports $LocalPorts/$protocolLower have matching rules"
             return $true
         }
         catch {
@@ -430,24 +430,15 @@ function Run-AppPortsInventory {
             return $bindings
         }
 
+        # Try to load WebAdministration module (may not be available in PS 5.1 or on all systems)
         try {
             Import-Module WebAdministration -ErrorAction Stop
-            Write-Log "WebAdministration module loaded"
+            Write-Log "WebAdministration module loaded successfully"
         }
         catch {
-            Write-Log "WebAdministration module not available"
-            $bindings += [PSCustomObject]@{
-                SiteName        = 'N/A'
-                Binding         = 'N/A'
-                Protocol        = 'N/A'
-                Port            = 'N/A'
-                IPAddress       = 'N/A'
-                HostHeader      = 'N/A'
-                RedirectType    = 'IIS Installation not detected'
-                RedirectTarget  = 'N/A'
-                ApplicationPool = 'N/A'
-            }
-            return $bindings
+            Write-Log "WebAdministration module not available (expected on PS 5.1 or non-admin contexts). IIS detection will be skipped."
+            # On PS 5.1 or non-admin, we can't access IIS via PowerShell
+            # The Get-Item IIS:\Sites below will return empty, which is expected
         }
 
         try {
