@@ -207,52 +207,69 @@ function Run-AppPortsInventory {
 
             # Check by port/protocol combination
             if ($LocalPorts -and $LocalPorts -ne 'N/A' -and $LocalPorts -ne 'Multiple') {
-                $portNumbers = $LocalPorts -split ','
+                $portNumbers = @($LocalPorts -split ',')
                 
+                # For each port, check ALL ports separately - all must exist for TRUE
                 foreach ($portNum in $portNumbers) {
                     $portNum = $portNum.Trim()
                     
                     # Parse port number
-                    if (-not [int]::TryParse($portNum, [ref]$null)) {
+                    $portNumInt = 0
+                    if (-not [int]::TryParse($portNum, [ref]$portNumInt)) {
+                        # Invalid port format, skip
                         continue
                     }
                     
-                    $portNumInt = [int]$portNum
+                    # Check if THIS specific port has a matching rule
+                    $portFound = $false
+                    $allRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue)
                     
-                    # Get all inbound allow rules
-                    $allRules = Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue
-                    
-                    if ($allRules) {
+                    if ($allRules -and $allRules.Count -gt 0) {
                         foreach ($rule in $allRules) {
                             $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
                             
                             if ($portFilter) {
-                                # Check if this rule matches our port and protocol
+                                # Explicit check - does this port filter match our port and protocol?
+                                $protocolMatch = ($portFilter.Protocol -eq $Protocol -or $portFilter.Protocol -eq 'Any')
+                                
+                                $portFilterValue = [string]$portFilter.LocalPort
                                 $portMatch = $false
                                 
-                                if ($portFilter.LocalPort -eq 'Any') {
+                                # Case 1: Any port
+                                if ($portFilterValue -eq 'Any') {
                                     $portMatch = $true
                                 }
-                                elseif ($portFilter.LocalPort -contains $portNumInt) {
+                                # Case 2: Exact port match
+                                elseif ($portFilterValue -eq $portNumInt.ToString()) {
                                     $portMatch = $true
                                 }
-                                else {
-                                    # Check if port range includes our port
-                                    try {
-                                        if ($portFilter.LocalPort -like "$portNumInt-*" -or $portFilter.LocalPort -like "*-$portNumInt" -or $portFilter.LocalPort -match "$portNumInt-\d+|\d+-$portNumInt") {
-                                            $portMatch = $true
-                                        }
+                                # Case 3: Port range (e.g., "5000-6000")
+                                elseif ($portFilterValue -match '^\d+-\d+$') {
+                                    $range = $portFilterValue -split '-'
+                                    $rangeStart = [int]$range[0]
+                                    $rangeEnd = [int]$range[1]
+                                    if ($portNumInt -ge $rangeStart -and $portNumInt -le $rangeEnd) {
+                                        $portMatch = $true
                                     }
-                                    catch { }
                                 }
                                 
-                                if ($portMatch -and ($portFilter.Protocol -eq $Protocol -or $portFilter.Protocol -eq 'Any')) {
-                                    return $true
+                                # If this rule matches both port and protocol, mark as found
+                                if ($portMatch -and $protocolMatch) {
+                                    $portFound = $true
+                                    break
                                 }
                             }
                         }
                     }
+                    
+                    # If this specific port was NOT found, return FALSE
+                    if (-not $portFound) {
+                        return $false
+                    }
                 }
+                
+                # All ports were found
+                return $true
             }
 
             return $false
