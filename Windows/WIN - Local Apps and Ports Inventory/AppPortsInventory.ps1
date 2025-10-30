@@ -189,14 +189,6 @@ function Run-AppPortsInventory {
         )
         
         try {
-            # Get all inbound allow rules
-            $fwRules = Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | 
-            Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
-            
-            if (-not $fwRules) {
-                return $false
-            }
-
             # Check by program path if available
             if ($Program -and $Program -ne 'N/A') {
                 $programRules = Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | 
@@ -206,7 +198,7 @@ function Run-AppPortsInventory {
                     # If program rule exists and protocol matches, consider it a match
                     foreach ($rule in $programRules) {
                         $ruleFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
-                        if ($ruleFilter -and $ruleFilter.Protocol -like $Protocol) {
+                        if ($ruleFilter -and ($ruleFilter.Protocol -eq $Protocol -or $ruleFilter.Protocol -eq 'Any')) {
                             return $true
                         }
                     }
@@ -219,15 +211,42 @@ function Run-AppPortsInventory {
                 
                 foreach ($portNum in $portNumbers) {
                     $portNum = $portNum.Trim()
-                    if ([int]::TryParse($portNum, [ref]$null)) {
-                        $portRules = Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue | 
-                        Get-NetFirewallPortFilter -ErrorAction SilentlyContinue | 
-                        Where-Object { $_.LocalPort -contains $portNum -or $_.LocalPort -eq 'Any' }
-                        
-                        if ($portRules) {
-                            # Validate protocol matches
-                            foreach ($portRule in $portRules) {
-                                if ($portRule.Protocol -like $Protocol -or $portRule.Protocol -eq 'Any') {
+                    
+                    # Parse port number
+                    if (-not [int]::TryParse($portNum, [ref]$null)) {
+                        continue
+                    }
+                    
+                    $portNumInt = [int]$portNum
+                    
+                    # Get all inbound allow rules
+                    $allRules = Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue
+                    
+                    if ($allRules) {
+                        foreach ($rule in $allRules) {
+                            $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
+                            
+                            if ($portFilter) {
+                                # Check if this rule matches our port and protocol
+                                $portMatch = $false
+                                
+                                if ($portFilter.LocalPort -eq 'Any') {
+                                    $portMatch = $true
+                                }
+                                elseif ($portFilter.LocalPort -contains $portNumInt) {
+                                    $portMatch = $true
+                                }
+                                else {
+                                    # Check if port range includes our port
+                                    try {
+                                        if ($portFilter.LocalPort -like "$portNumInt-*" -or $portFilter.LocalPort -like "*-$portNumInt" -or $portFilter.LocalPort -match "$portNumInt-\d+|\d+-$portNumInt") {
+                                            $portMatch = $true
+                                        }
+                                    }
+                                    catch { }
+                                }
+                                
+                                if ($portMatch -and ($portFilter.Protocol -eq $Protocol -or $portFilter.Protocol -eq 'Any')) {
                                     return $true
                                 }
                             }
