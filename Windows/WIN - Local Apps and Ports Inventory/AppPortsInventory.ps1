@@ -287,10 +287,19 @@ function Run-AppPortsInventory {
         }
 
         try {
-            $appRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -Program $Program -ErrorAction SilentlyContinue)
-            return ($appRules.Count -gt 0)
+            # Get all inbound allow rules and filter by program manually
+            $allRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue)
+            
+            foreach ($rule in $allRules) {
+                if ($rule.Program -eq $Program) {
+                    return $true
+                }
+            }
+            
+            return $false
         }
         catch {
+            Write-Log "Error checking app firewall rules for $Program : $_"
             return $false
         }
     }
@@ -306,6 +315,7 @@ function Run-AppPortsInventory {
         }
 
         try {
+            # Parse ports
             $portNumbers = @($LocalPorts -split ',' | ForEach-Object { $_.Trim() })
             $requiredPorts = @()
             
@@ -320,61 +330,68 @@ function Run-AppPortsInventory {
                 return $false
             }
 
-            # Get all inbound allow rules
+            # Get all inbound allow rules - ONLY check rules with port filters
             $allRules = @(Get-NetFirewallRule -Direction Inbound -Action Allow -ErrorAction SilentlyContinue)
             if ($allRules.Count -eq 0) {
                 return $false
             }
 
-            # Check each required port
+            # Check EACH required port individually
             foreach ($requiredPort in $requiredPorts) {
                 $portFound = $false
 
                 foreach ($rule in $allRules) {
                     $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
+                    
+                    # Skip rules with no port filter (these are not port-specific)
                     if (-not $portFilter) {
                         continue
                     }
 
-                    # Check protocol match
-                    $protocolMatches = ($portFilter.Protocol -eq $Protocol -or $portFilter.Protocol -eq 'Any')
-                    if (-not $protocolMatches) {
+                    # First check: Protocol must match
+                    if ($portFilter.Protocol -ne $Protocol -and $portFilter.Protocol -ne 'Any') {
                         continue
                     }
 
-                    # Check port match
+                    # Second check: Port must match
                     $portFilterValue = [string]$portFilter.LocalPort
-                    
+                    $localPortMatches = $false
+
+                    # Case 1: "Any" port means all ports allowed
                     if ($portFilterValue -eq 'Any') {
-                        $portFound = $true
-                        break
+                        $localPortMatches = $true
                     }
+                    # Case 2: Exact port match
                     elseif ($portFilterValue -eq $requiredPort.ToString()) {
+                        $localPortMatches = $true
+                    }
+                    # Case 3: Port range
+                    elseif ($portFilterValue -match '^\d+-\d+$') {
+                        $parts = $portFilterValue -split '-'
+                        $rangeStart = [int]$parts[0]
+                        $rangeEnd = [int]$parts[1]
+                        if ($requiredPort -ge $rangeStart -and $requiredPort -le $rangeEnd) {
+                            $localPortMatches = $true
+                        }
+                    }
+
+                    if ($localPortMatches) {
                         $portFound = $true
                         break
-                    }
-                    elseif ($portFilterValue -match '^\d+-\d+$') {
-                        $range = $portFilterValue -split '-'
-                        if ($range.Count -eq 2) {
-                            $rangeStart = [int]$range[0]
-                            $rangeEnd = [int]$range[1]
-                            if ($requiredPort -ge $rangeStart -and $requiredPort -le $rangeEnd) {
-                                $portFound = $true
-                                break
-                            }
-                        }
                     }
                 }
 
-                # If any port not found, return FALSE
+                # If THIS specific port was not found, return FALSE
                 if (-not $portFound) {
                     return $false
                 }
             }
 
+            # All required ports have matching rules
             return $true
         }
         catch {
+            Write-Log "Error checking port firewall rules for ports $LocalPorts protocol $Protocol : $_"
             return $false
         }
     }
