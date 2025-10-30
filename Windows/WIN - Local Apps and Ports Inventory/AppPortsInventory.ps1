@@ -315,6 +315,9 @@ function Run-AppPortsInventory {
         }
 
         try {
+            # Normalize protocol to lowercase for comparison
+            $protocolLower = $Protocol.ToLower()
+
             # Parse ports
             $portNumbers = @($LocalPorts -split ',' | ForEach-Object { $_.Trim() })
             $requiredPorts = @()
@@ -336,20 +339,21 @@ function Run-AppPortsInventory {
                 return $false
             }
 
-            # Check EACH required port individually
+            # Check EACH required port individually - ALL ports must have matching rules
             foreach ($requiredPort in $requiredPorts) {
                 $portFound = $false
 
                 foreach ($rule in $allRules) {
                     $portFilter = $rule | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
                     
-                    # Skip rules with no port filter (these are not port-specific)
+                    # Skip rules with no port filter (these are not port-specific rules)
                     if (-not $portFilter) {
                         continue
                     }
 
-                    # First check: Protocol must match
-                    if ($portFilter.Protocol -ne $Protocol -and $portFilter.Protocol -ne 'Any') {
+                    # First check: Protocol must match (case-insensitive)
+                    $filterProtocolLower = $portFilter.Protocol.ToLower()
+                    if ($filterProtocolLower -ne $protocolLower -and $filterProtocolLower -ne 'any') {
                         continue
                     }
 
@@ -375,13 +379,14 @@ function Run-AppPortsInventory {
                         }
                     }
 
+                    # If this rule matches both protocol and port, mark as found
                     if ($localPortMatches) {
                         $portFound = $true
                         break
                     }
                 }
 
-                # If THIS specific port was not found, return FALSE
+                # If THIS specific port was NOT found, return FALSE immediately
                 if (-not $portFound) {
                     return $false
                 }
