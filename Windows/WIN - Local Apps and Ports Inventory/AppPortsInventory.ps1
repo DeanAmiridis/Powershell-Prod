@@ -628,7 +628,7 @@ function Run-AppPortsInventory {
                 RuleName              = ("Allow - {0} - {1} {2}" -f $appName, $r.Protocol, $ports) -replace '[^\w\s\-\(\)\.,]', ''
                 Program               = $r.ExePath
                 Protocol              = $r.Protocol
-                LocalPorts            = $ports
+                LocalPorts            = "'$ports"
                 Profile               = 'Any'
                 Direction             = 'Inbound'
                 ServiceName           = $r.ServiceName
@@ -669,7 +669,7 @@ function Run-AppPortsInventory {
                         RuleName              = ("Allow - IIS - {0} - {1} - {2}" -f $binding.SiteName, $binding.Protocol.ToUpper(), $portInfo) -replace '[^\w\s\-\(\)\.,]', ''
                         Program               = 'C:\Windows\System32\inetsrv\w3wp.exe'
                         Protocol              = $binding.Protocol
-                        LocalPorts            = $portInfo
+                        LocalPorts            = "'$portInfo"
                         Profile               = 'Any'
                         Direction             = 'Inbound'
                         ServiceName           = 'W3SVC'
